@@ -1,7 +1,8 @@
 {
-  "name": "vue-funnel-graph-js",
-  "version": "0.1.8",
-  "description": "",
+  "name": "vue-funnel-graph-js-v2",
+  "version": "1.0.0",
+  "author": "lastboy",
+  "description": "This is a fork from greghub repo - mainly for build and dependencies fixes ",
   "main": "dist/vue-funnel-graph.umd.js",
   "module": "dist/vue-funnel-graph.esm.js",
   "unpkg": "dist/vue-funnel-graph.min.js",
@@ -15,7 +16,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/greghub/vue-funnel-graph-js.git"
+    "url": "https://github.com/lastboy/vue-funnel-graph-js-v2.git"
   },
   "licence": "MIT",
   "keywords": [
@@ -42,7 +43,7 @@
   "dependencies": {
     "@tweenjs/tween.js": "^17.4.0",
     "funnel-graph-js": "^1.4.1",
-    "node-sass": "^4.13.1",
+    "node-sass": "^8.0.0",
     "polymorph-js": "^0.2.4",
     "sass-loader": "^7.3.1"
   },

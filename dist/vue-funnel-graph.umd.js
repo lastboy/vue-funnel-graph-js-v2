@@ -4,224 +4,224 @@
     (global = global || self, factory(global.VueFunnelGraph = {}, global.interpolate, global.TWEEN, global.FunnelGraph, global.formatNumber, global.getDefaultColors));
 }(this, (function (exports, polymorphJs, TWEEN, FunnelGraph, number, graph) { 'use strict';
 
-    TWEEN = TWEEN && TWEEN.hasOwnProperty('default') ? TWEEN['default'] : TWEEN;
-    FunnelGraph = FunnelGraph && FunnelGraph.hasOwnProperty('default') ? FunnelGraph['default'] : FunnelGraph;
+    TWEEN = TWEEN && Object.prototype.hasOwnProperty.call(TWEEN, 'default') ? TWEEN['default'] : TWEEN;
+    FunnelGraph = FunnelGraph && Object.prototype.hasOwnProperty.call(FunnelGraph, 'default') ? FunnelGraph['default'] : FunnelGraph;
 
     //
 
-    var script = {
-        name: 'VueFunnelGraph',
-        props: {
-            animated: {
-                type: Boolean,
-                default: false
-            },
-            width: [String, Number],
-            height: [String, Number],
-            values: Array,
-            labels: Array,
-            colors: {
-                type: Array,
-                default: function default$1() { return []; }
-            },
-            subLabels: Array,
-            subLabelValue: {
-                type: String,
-                default: 'percent'
-            },
-            direction: {
-                type: String,
-                default: 'horizontal'
-            },
-            gradientDirection: {
-                type: String,
-                default: 'horizontal'
-            },
-            displayPercentage: {
-                type: Boolean,
-                default: true
-            }
-        },
-        data: function data() {
-            return {
-                paths: [],
-                prevPaths: [], // paths before update, used for animations
-                graph: null,
-                tween: null,
-                defaultColors: graph.getDefaultColors(10)
-            };
-        },
-        computed: {
-            valuesFormatted: function valuesFormatted() {
-                if (this.graph.is2d()) {
-                    return this.graph.getValues2d().map(function (value) { return number.formatNumber(value); });
+        var script = {
+            name: 'VueFunnelGraph',
+            props: {
+                animated: {
+                    type: Boolean,
+                    default: false
+                },
+                width: [String, Number],
+                height: [String, Number],
+                values: Array,
+                labels: Array,
+                colors: {
+                    type: Array,
+                    default: function default$1() { return []; }
+                },
+                subLabels: Array,
+                subLabelValue: {
+                    type: String,
+                    default: 'percent'
+                },
+                direction: {
+                    type: String,
+                    default: 'horizontal'
+                },
+                gradientDirection: {
+                    type: String,
+                    default: 'horizontal'
+                },
+                displayPercentage: {
+                    type: Boolean,
+                    default: true
                 }
-                return this.values.map(function (value) { return number.formatNumber(value); });
             },
-            colorSet: function colorSet() {
-                var colorSet = [];
-                var gradientCount = 0;
-
-                for (var i = 0; i < this.paths.length; i++) {
-                    var values = this.graph.is2d() ? this.getColors[i] : this.getColors;
-                    var fillMode = (typeof values === 'string' || values.length === 1) ? 'solid' : 'gradient';
-                    if (fillMode === 'gradient') { gradientCount += 1; }
-                    colorSet.push({
-                        values: values,
-                        fillMode: fillMode,
-                        fill: fillMode === 'solid' ? values : ("url('#funnelGradient-" + gradientCount + "')")
-                    });
-                }
-                return colorSet;
+            data: function data() {
+                return {
+                    paths: [],
+                    prevPaths: [], // paths before update, used for animations
+                    graph: null,
+                    tween: null,
+                    defaultColors: graph.getDefaultColors(10)
+                };
             },
-            gradientSet: function gradientSet() {
-                var gradientSet = [];
-                this.colorSet.forEach(function (colors) {
-                    if (colors.fillMode === 'gradient') {
-                        gradientSet.push(colors);
+            computed: {
+                valuesFormatted: function valuesFormatted() {
+                    if (this.graph.is2d()) {
+                        return this.graph.getValues2d().map(function (value) { return number.formatNumber(value); });
                     }
-                });
-                return gradientSet;
-            },
-            getColors: function getColors() {
-                if (this.colors instanceof Array && this.colors.length === 0) {
-                    return graph.getDefaultColors(this.is2d() ? this.values[0].length : 2);
-                }
-                if (this.colors.length < this.paths.length) {
-                    return [].concat( this.colors ).concat(
-                        [].concat( this.defaultColors ).splice(this.paths.length, this.paths.length - this.colors.length)
-                    );
-                }
-                return this.colors;
-            },
-            gradientAngle: function gradientAngle() {
-                return ("rotate(" + (this.gradientDirection === 'vertical' ? 90 : 0) + ")");
-            }
-        },
-        methods: {
-            enterTransition: function enterTransition(el, done) {
-                if (!this.animated) { done(); }
-                setTimeout(function () { return done(); }, 700);
-            },
-            leaveTransition: function leaveTransition(el, done) {
-                if (!this.animated) { done(); }
-                setTimeout(function () { return done(); }, 700);
-            },
-            is2d: function is2d() {
-                return this.graph.is2d();
-            },
-            percentages: function percentages() {
-                return this.graph.createPercentages();
-            },
-            twoDimPercentages: function twoDimPercentages() {
-                if (!this.is2d()) {
-                    return [];
-                }
-                return this.graph.getPercentages2d();
-            },
-            subLabelBackgrounds: function subLabelBackgrounds(index) {
-                if (!this.is2d()) {
-                    return [];
-                }
-                return graph.generateLegendBackground(this.getColors[index], this.gradientDirection);
-            },
-            offsetColor: function offsetColor(index, length) {
-                return ((Math.round(100 * index / (length - 1))) + "%");
-            },
-            makeAnimations: function makeAnimations() {
-                var this$1 = this;
+                    return this.values.map(function (value) { return number.formatNumber(value); });
+                },
+                colorSet: function colorSet() {
+                    var colorSet = [];
+                    var gradientCount = 0;
 
-                if (this.tween !== null) { this.tween.stop(); }
-                var interpolators = [];
-                var dimensionChanged = this.prevPaths.length !== this.paths.length;
-
-                var origin = { x: 0.5, y: 0.5 };
-                if (dimensionChanged) {
-                    origin = { x: 0, y: 0.5 };
-                    if (this.graph.isVertical()) {
-                        origin = { x: 1, y: 1 };
+                    for (var i = 0; i < this.paths.length; i++) {
+                        var values = this.graph.is2d() ? this.getColors[i] : this.getColors;
+                        var fillMode = (typeof values === 'string' || values.length === 1) ? 'solid' : 'gradient';
+                        if (fillMode === 'gradient') { gradientCount += 1; }
+                        colorSet.push({
+                            values: values,
+                            fillMode: fillMode,
+                            fill: fillMode === 'solid' ? values : ("url('#funnelGradient-" + gradientCount + "')")
+                        });
                     }
-                    if (!this.graph.is2d()) {
-                        origin = { x: 0, y: 1 };
-                    }
-                }
-
-                this.paths.forEach(function (path, index) {
-                    var oldPath = this$1.prevPaths[index] || this$1.graph.getPathMedian(index);
-                    if (dimensionChanged) { oldPath = this$1.graph.getPathMedian(index); }
-                    var interpolator = polymorphJs.interpolate([oldPath, path], {
-                        addPoints: 1,
-                        origin: origin,
-                        optimize: 'fill',
-                        precision: 1
-                    });
-
-                    interpolators.push(interpolator);
-                });
-
-                function animate() {
-                    if (TWEEN.update()) {
-                        requestAnimationFrame(animate);
-                    }
-                }
-
-                var position = { value: 0 };
-                this.tween = new TWEEN.Tween(position)
-                    .to({ value: 1 }, 700)
-                    .easing(TWEEN.Easing.Cubic.InOut)
-                    .onUpdate(function () {
-                        for (var index = 0; index < this$1.paths.length; index++) {
-                            this$1.$set(this$1.paths, index, interpolators[index](position.value));
+                    return colorSet;
+                },
+                gradientSet: function gradientSet() {
+                    var gradientSet = [];
+                    this.colorSet.forEach(function (colors) {
+                        if (colors.fillMode === 'gradient') {
+                            gradientSet.push(colors);
                         }
                     });
-
-                this.tween.start();
-                animate();
-            },
-            drawPaths: function drawPaths() {
-                var this$1 = this;
-
-                this.prevPaths = this.paths;
-                this.paths = [];
-                var definitions = this.graph.getPathDefinitions();
-
-                definitions.forEach(function (d) {
-                    this$1.paths.push(d);
-                });
-            }
-        },
-        created: function created() {
-            this.graph = new FunnelGraph({
-                height: this.height,
-                width: this.width,
-                direction: this.direction,
-                data: {
-                    labels: this.labels,
-                    values: this.values
+                    return gradientSet;
+                },
+                getColors: function getColors() {
+                    if (this.colors instanceof Array && this.colors.length === 0) {
+                        return graph.getDefaultColors(this.is2d() ? this.values[0].length : 2);
+                    }
+                    if (this.colors.length < this.paths.length) {
+                        return [].concat( this.colors ).concat(
+                            [].concat( this.defaultColors ).splice(this.paths.length, this.paths.length - this.colors.length)
+                        );
+                    }
+                    return this.colors;
+                },
+                gradientAngle: function gradientAngle() {
+                    return ("rotate(" + (this.gradientDirection === 'vertical' ? 90 : 0) + ")");
                 }
-            });
-            this.drawPaths();
-            if (this.animated) { this.makeAnimations(); }
-        },
-        watch: {
-            values: function values() {
-                this.graph.setValues(this.values);
+            },
+            methods: {
+                enterTransition: function enterTransition(el, done) {
+                    if (!this.animated) { done(); }
+                    setTimeout(function () { return done(); }, 700);
+                },
+                leaveTransition: function leaveTransition(el, done) {
+                    if (!this.animated) { done(); }
+                    setTimeout(function () { return done(); }, 700);
+                },
+                is2d: function is2d() {
+                    return this.graph.is2d();
+                },
+                percentages: function percentages() {
+                    return this.graph.createPercentages();
+                },
+                twoDimPercentages: function twoDimPercentages() {
+                    if (!this.is2d()) {
+                        return [];
+                    }
+                    return this.graph.getPercentages2d();
+                },
+                subLabelBackgrounds: function subLabelBackgrounds(index) {
+                    if (!this.is2d()) {
+                        return [];
+                    }
+                    return graph.generateLegendBackground(this.getColors[index], this.gradientDirection);
+                },
+                offsetColor: function offsetColor(index, length) {
+                    return ((Math.round(100 * index / (length - 1))) + "%");
+                },
+                makeAnimations: function makeAnimations() {
+                    var this$1 = this;
+
+                    if (this.tween !== null) { this.tween.stop(); }
+                    var interpolators = [];
+                    var dimensionChanged = this.prevPaths.length !== this.paths.length;
+
+                    var origin = { x: 0.5, y: 0.5 };
+                    if (dimensionChanged) {
+                        origin = { x: 0, y: 0.5 };
+                        if (this.graph.isVertical()) {
+                            origin = { x: 1, y: 1 };
+                        }
+                        if (!this.graph.is2d()) {
+                            origin = { x: 0, y: 1 };
+                        }
+                    }
+
+                    this.paths.forEach(function (path, index) {
+                        var oldPath = this$1.prevPaths[index] || this$1.graph.getPathMedian(index);
+                        if (dimensionChanged) { oldPath = this$1.graph.getPathMedian(index); }
+                        var interpolator = polymorphJs.interpolate([oldPath, path], {
+                            addPoints: 1,
+                            origin: origin,
+                            optimize: 'fill',
+                            precision: 1
+                        });
+
+                        interpolators.push(interpolator);
+                    });
+
+                    function animate() {
+                        if (TWEEN.update()) {
+                            requestAnimationFrame(animate);
+                        }
+                    }
+
+                    var position = { value: 0 };
+                    this.tween = new TWEEN.Tween(position)
+                        .to({ value: 1 }, 700)
+                        .easing(TWEEN.Easing.Cubic.InOut)
+                        .onUpdate(function () {
+                            for (var index = 0; index < this$1.paths.length; index++) {
+                                this$1.$set(this$1.paths, index, interpolators[index](position.value));
+                            }
+                        });
+
+                    this.tween.start();
+                    animate();
+                },
+                drawPaths: function drawPaths() {
+                    var this$1 = this;
+
+                    this.prevPaths = this.paths;
+                    this.paths = [];
+                    var definitions = this.graph.getPathDefinitions();
+
+                    definitions.forEach(function (d) {
+                        this$1.paths.push(d);
+                    });
+                }
+            },
+            created: function created() {
+                this.graph = new FunnelGraph({
+                    height: this.height,
+                    width: this.width,
+                    direction: this.direction,
+                    data: {
+                        labels: this.labels,
+                        values: this.values
+                    }
+                });
                 this.drawPaths();
                 if (this.animated) { this.makeAnimations(); }
             },
-            direction: function direction() {
-                this.graph.setDirection(this.direction)
-                    .setWidth(this.width)
-                    .setHeight(this.height);
-                this.drawPaths();
+            watch: {
+                values: function values() {
+                    this.graph.setValues(this.values);
+                    this.drawPaths();
+                    if (this.animated) { this.makeAnimations(); }
+                },
+                direction: function direction() {
+                    this.graph.setDirection(this.direction)
+                        .setWidth(this.width)
+                        .setHeight(this.height);
+                    this.drawPaths();
+                }
+            },
+            filters: {
+                format: function (value) {
+                    return number.formatNumber(value)
+                }
             }
-        },
-        filters: {
-            format: function (value) {
-                return number.formatNumber(value)
-            }
-        }
-    };
+        };
 
     function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier
     /* server only */
