@@ -1,9 +1,11 @@
-# VueFunnelGraph.js
+#  	$${\color{red}DEPRECATED}$$ 
 
-![npm](https://img.shields.io/npm/v/vue-funnel-graph-js.svg)
-![GitHub](https://img.shields.io/github/license/greghub/vue-funnel-graph-js.svg)
-![GitHub last commit](https://img.shields.io/github/last-commit/greghub/vue-funnel-graph-js.svg)
-[![Gitter](https://img.shields.io/gitter/room/greghub/funnel-graph-js.svg)](https://gitter.im/funnel-graph-js/community)
+> [!WARNING]
+> This project is no longer maintained. Please use [d3-funnel-graph](https://github.com/lastboy/d3-funnel-graph) instead
+
+-----------------------------------------
+
+# VueFunnelGraph.js
 
 Funnel graph drawing library for Vue.js.
 
